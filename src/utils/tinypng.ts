@@ -1,25 +1,53 @@
-import tinify from 'tinify';
-
 const TINYPNG_API_KEY = 'tQzHVrC16K6Mr4kyyPsZzzy4Xk2BqrF4';
+const TINYPNG_API_URL = 'https://api.tinify.com/shrink';
 
-// Initialize tinify with API key
-tinify.key = TINYPNG_API_KEY;
+let compressionCount = 0;
 
 export async function compressImage(file: File): Promise<Blob> {
   try {
-    // Convert File to ArrayBuffer
-    const arrayBuffer = await file.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
+    // Create Basic Auth header
+    const auth = btoa(`api:${TINYPNG_API_KEY}`);
 
-    // Compress using tinify SDK
-    const source = tinify.fromBuffer(buffer);
-    const resultBuffer = await source.toBuffer();
+    // Upload image to TinyPNG
+    const uploadResponse = await fetch(TINYPNG_API_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Basic ${auth}`,
+      },
+      body: file,
+    });
 
-    // Convert Buffer to Blob
-    return new Blob([resultBuffer], { type: file.type });
+    if (!uploadResponse.ok) {
+      let errorMessage = 'Compression failed';
+      try {
+        const error = await uploadResponse.json();
+        errorMessage = error.message || error.error || errorMessage;
+      } catch {
+        errorMessage = `HTTP ${uploadResponse.status}: ${uploadResponse.statusText}`;
+      }
+      throw new Error(errorMessage);
+    }
+
+    // Get compression count from response header
+    const compCount = uploadResponse.headers.get('Compression-Count');
+    if (compCount) {
+      compressionCount = parseInt(compCount, 10);
+    }
+
+    const result = await uploadResponse.json();
+
+    // Download compressed image
+    const downloadResponse = await fetch(result.output.url);
+
+    if (!downloadResponse.ok) {
+      throw new Error('Failed to download compressed image');
+    }
+
+    const blob = await downloadResponse.blob();
+    return blob;
   } catch (error) {
     console.error('TinyPNG compression error:', error);
-    throw new Error(error instanceof Error ? error.message : 'Compression failed');
+    throw error instanceof Error ? error : new Error('Compression failed');
   }
 }
 
@@ -37,5 +65,5 @@ export function calculateSavings(original: number, compressed: number): number {
 }
 
 export function getRemainingCompressions(): number {
-  return tinify.compressionCount || 0;
+  return compressionCount;
 }

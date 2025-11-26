@@ -113,9 +113,10 @@ const ImageCompressor = () => {
     setIsCompressing(false);
 
     const compressionCount = getRemainingCompressions();
-    toast.success(
-      `压缩完成！成功: ${successCount}, 失败: ${failCount}. API 使用次数: ${compressionCount}`
-    );
+    const message = compressionCount > 0
+      ? `压缩完成！成功: ${successCount}, 失败: ${failCount}. API 已使用: ${compressionCount} 次`
+      : `压缩完成！成功: ${successCount}, 失败: ${failCount}`;
+    toast.success(message);
   };
 
   const downloadAll = () => {
