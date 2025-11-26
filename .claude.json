@@ -1,0 +1,35 @@
+{
+  "installMethod": "unknown",
+  "autoUpdates": true,
+  "cachedStatsigGates": {
+    "tengu_disable_bypass_permissions_mode": false,
+    "tengu_tool_pear": false,
+    "tengu_web_tasks": true
+  },
+  "firstStartTime": "2025-11-26T06:56:13.109Z",
+  "userID": "0cc4e6109519bffba66007265425e0b9c9e61a4bf1db5434537001f442d07b85",
+  "sonnet45MigrationComplete": true,
+  "opus45MigrationComplete": true,
+  "projects": {
+    "/app": {
+      "allowedTools": [],
+      "mcpContextUris": [],
+      "mcpServers": {},
+      "enabledMcpjsonServers": [],
+      "disabledMcpjsonServers": [],
+      "hasTrustDialogAccepted": false,
+      "projectOnboardingSeenCount": 0,
+      "hasClaudeMdExternalIncludesApproved": false,
+      "hasClaudeMdExternalIncludesWarningShown": false,
+      "exampleFiles": [
+        "I don't see any files listed in your message. Please provide:",
+        "",
+        "1. A list of files modified by the user (with modification counts)",
+        "2. A list of files modified by other users (with modification counts)",
+        "",
+        "Once you provide this data, I'll return exactly five filenames that represent core application logic."
+      ],
+      "exampleFilesGeneratedAt": 1764140175336
+    }
+  }
+}
