@@ -1,49 +1,36 @@
-const TINYPNG_API_KEY = 'tQzHVrC16K6Mr4kyyPsZzzy4Xk2BqrF4';
-const TINYPNG_API_URL = 'https://api.tinify.com/shrink';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
 
 let compressionCount = 0;
 
 export async function compressImage(file: File): Promise<Blob> {
   try {
-    // Create Basic Auth header
-    const auth = btoa(`api:${TINYPNG_API_KEY}`);
-
-    // Upload image to TinyPNG
-    const uploadResponse = await fetch(TINYPNG_API_URL, {
+    // Send image to backend API
+    const response = await fetch(`${API_BASE_URL}/api/compress`, {
       method: 'POST',
       headers: {
-        'Authorization': `Basic ${auth}`,
+        'Content-Type': file.type,
       },
       body: file,
     });
 
-    if (!uploadResponse.ok) {
+    if (!response.ok) {
       let errorMessage = 'Compression failed';
       try {
-        const error = await uploadResponse.json();
-        errorMessage = error.message || error.error || errorMessage;
+        const error = await response.json();
+        errorMessage = error.error || errorMessage;
       } catch {
-        errorMessage = `HTTP ${uploadResponse.status}: ${uploadResponse.statusText}`;
+        errorMessage = `HTTP ${response.status}: ${response.statusText}`;
       }
       throw new Error(errorMessage);
     }
 
     // Get compression count from response header
-    const compCount = uploadResponse.headers.get('Compression-Count');
+    const compCount = response.headers.get('Compression-Count');
     if (compCount) {
       compressionCount = parseInt(compCount, 10);
     }
 
-    const result = await uploadResponse.json();
-
-    // Download compressed image
-    const downloadResponse = await fetch(result.output.url);
-
-    if (!downloadResponse.ok) {
-      throw new Error('Failed to download compressed image');
-    }
-
-    const blob = await downloadResponse.blob();
+    const blob = await response.blob();
     return blob;
   } catch (error) {
     console.error('TinyPNG compression error:', error);
