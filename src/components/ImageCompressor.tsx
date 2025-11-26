@@ -1,11 +1,10 @@
 import { useState, useCallback } from 'react';
 import { ImageFile, CompressionStats } from '../types/tinypng';
-import { compressImage } from '../utils/tinypng';
+import { compressImage, getRemainingCompressions } from '../utils/tinypng';
 import { v4 as uuidv4 } from 'uuid';
 import { Upload, Download, Trash2, FolderOpen } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card } from './ui/card';
-import { Progress } from './ui/progress';
 import { toast } from 'sonner';
 import ImageList from './ImageList';
 import StatsPanel from './StatsPanel';
@@ -68,12 +67,14 @@ const ImageCompressor = () => {
     }
 
     setIsCompressing(true);
+    let successCount = 0;
+    let failCount = 0;
 
     for (const image of pendingImages) {
       try {
         setImages((prev) =>
           prev.map((img) =>
-            img.id === image.id ? { ...img, status: 'compressing', progress: 0 } : img
+            img.id === image.id ? { ...img, status: 'compressing', progress: 50 } : img
           )
         );
 
@@ -92,6 +93,7 @@ const ImageCompressor = () => {
               : img
           )
         );
+        successCount++;
       } catch (error) {
         setImages((prev) =>
           prev.map((img) =>
@@ -104,11 +106,16 @@ const ImageCompressor = () => {
               : img
           )
         );
+        failCount++;
       }
     }
 
     setIsCompressing(false);
-    toast.success('压缩完成！');
+
+    const compressionCount = getRemainingCompressions();
+    toast.success(
+      `压缩完成！成功: ${successCount}, 失败: ${failCount}. API 使用次数: ${compressionCount}`
+    );
   };
 
   const downloadAll = () => {

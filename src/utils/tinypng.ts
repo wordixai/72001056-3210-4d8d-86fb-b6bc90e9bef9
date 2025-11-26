@@ -1,35 +1,25 @@
+import tinify from 'tinify';
+
 const TINYPNG_API_KEY = 'tQzHVrC16K6Mr4kyyPsZzzy4Xk2BqrF4';
-const TINYPNG_API_URL = 'https://api.tinify.com/shrink';
+
+// Initialize tinify with API key
+tinify.key = TINYPNG_API_KEY;
 
 export async function compressImage(file: File): Promise<Blob> {
   try {
-    // Upload image to TinyPNG
-    const uploadResponse = await fetch(TINYPNG_API_URL, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + btoa('api:' + TINYPNG_API_KEY),
-      },
-      body: file,
-    });
+    // Convert File to ArrayBuffer
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
 
-    if (!uploadResponse.ok) {
-      const error = await uploadResponse.json();
-      throw new Error(error.message || 'Compression failed');
-    }
+    // Compress using tinify SDK
+    const source = tinify.fromBuffer(buffer);
+    const resultBuffer = await source.toBuffer();
 
-    const result = await uploadResponse.json();
-
-    // Download compressed image
-    const downloadResponse = await fetch(result.output.url);
-
-    if (!downloadResponse.ok) {
-      throw new Error('Failed to download compressed image');
-    }
-
-    return await downloadResponse.blob();
+    // Convert Buffer to Blob
+    return new Blob([resultBuffer], { type: file.type });
   } catch (error) {
     console.error('TinyPNG compression error:', error);
-    throw error;
+    throw new Error(error instanceof Error ? error.message : 'Compression failed');
   }
 }
 
@@ -44,4 +34,8 @@ export function formatFileSize(bytes: number): string {
 export function calculateSavings(original: number, compressed: number): number {
   if (original === 0) return 0;
   return Math.round((1 - compressed / original) * 100);
+}
+
+export function getRemainingCompressions(): number {
+  return tinify.compressionCount || 0;
 }
